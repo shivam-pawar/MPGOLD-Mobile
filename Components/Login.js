@@ -7,16 +7,37 @@ import {
   Alert,
   TouchableOpacity,
   ImageBackground,
+  ToastAndroid,
 } from "react-native";
+import Firebase from "../firebase";
 
-export default function Login() {
+export default function Login({ navigation }) {
   const [username, onChangeUsername] = React.useState("");
   const [password, onChangePassword] = React.useState("");
+  const auth = Firebase.auth();
+
+  const checkCredentials = async () => {
+    await auth.signInWithEmailAndPassword(username, password).then(
+      function (result) {
+        ToastAndroid.show("Logged in successfully", ToastAndroid.SHORT);
+        navigation.navigate("Home");
+      },
+      function (error) {
+        ToastAndroid.show("Invalid Login or Password", ToastAndroid.SHORT);
+        navigation.navigate("Login");
+        if (error.code === "auth/account-exists-with-different-credential") {
+          auth
+            .fetchSignInMethodsForEmail(username)
+            .then(function (providers) {});
+        }
+      }
+    );
+  };
 
   return (
     <ImageBackground
       source={require("../assets/background.jpg")}
-      style={{ width: "100%", height: "100%", marginTop: 40 }}
+      style={{ width: "100%", height: "100%" }}
     >
       <Text style={styles.container}>
         Hi, Welcome To M. P. Gold Employee Portal
@@ -39,9 +60,7 @@ export default function Login() {
         />
         <Separator />
         <TouchableOpacity
-          onPress={() => {
-            Alert.alert("Clicked");
-          }}
+          onPress={checkCredentials}
           style={styles.appButtonContainer}
         >
           <Text style={styles.appButtonText}>Login</Text>
